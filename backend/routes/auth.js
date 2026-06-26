@@ -61,9 +61,15 @@ router.post('/login', async (req, res) => {
       permissions
     });
   } catch (err) {
-    console.error('Auth login error:', err);
-    res.status(500).json({ message: 'Server error' });
-  }
+  console.error("========== LOGIN ERROR ==========");
+  console.error(err);
+  console.error(err.stack);
+
+  res.status(500).json({
+    message: err.message
+  });
+}
+
 });
 
 // Get current user with permissions
