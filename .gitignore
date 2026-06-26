@@ -32,7 +32,6 @@ Thumbs.db
 # package-lock.json
 
 # SSL Certificate
-*.pem
 
 # Environment backups
 *.env.local
