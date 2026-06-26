@@ -8,9 +8,9 @@ const scheduleDueEmailReminders = require('./services/scheduleDueEmailReminders'
 
 app.use(cors({
   origin: [
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'https://your-vercel-domain.vercel.app'
+    "http://localhost:3000",
+    "http://localhost:5173",
+    "https://orbem-solutions.vercel.app"
   ],
   credentials: true
 }));
