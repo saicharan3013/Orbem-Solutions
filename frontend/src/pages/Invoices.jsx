@@ -96,7 +96,7 @@ export default function Invoices() {
   const downloadPDF = async (id, invoiceNumber) => {
     try {
       const token = localStorage.getItem('orbem_token');
-      const response = await fetch(`http://localhost:5000/api/invoices/${id}/pdf`, {
+      const response = await fetch(`https://orbem-solutions-backend.onrender.com/${id}/pdf`, {
         method: 'GET',
         headers: {
           'Authorization': `Bearer ${token}`

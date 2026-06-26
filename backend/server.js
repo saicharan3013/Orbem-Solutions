@@ -6,8 +6,14 @@ const app = express();
 const db = require('./db');
 const scheduleDueEmailReminders = require('./services/scheduleDueEmailReminders');
 
-app.use(cors({ origin: 'http://localhost:3000', credentials: true }));
-app.use(express.json());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'https://your-vercel-domain.vercel.app'
+  ],
+  credentials: true
+}));
 
 // Routes
 app.use('/api/auth', require('./routes/auth'));
