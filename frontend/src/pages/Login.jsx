@@ -37,7 +37,8 @@ export default function Login() {
       // Redirect to dashboard for both admin and staff
       navigate('/');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      const message = err.response?.data?.message || err.message || 'Login failed';
+      setError(message);
     } finally {
       setLoading(false);
     }
