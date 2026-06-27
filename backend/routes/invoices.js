@@ -49,7 +49,7 @@ const determineStatus = (amount, paidAmount, currentStatus) => {
   return currentStatus || 'draft';
 };
 
-async function emailInvoiceIfPaid(invoiceId) {
+async function emailInvoiceToCustomer(invoiceId) {
   const [invoiceRows] = await db.query(`
       SELECT
         i.id,
@@ -88,7 +88,10 @@ async function emailInvoiceIfPaid(invoiceId) {
 
   if (!invoiceRows.length) return;
   const invoice = invoiceRows[0];
-  if (!invoice.customer_email) return;
+  if (!invoice.customer_email) {
+    console.warn(`Invoice ${invoiceId} not emailed: customer email missing`);
+    return;
+  }
 
   const pdfBuffer = await generateInvoicePDF(invoice);
   await sendInvoiceEmail(invoice.customer_email, invoice, pdfBuffer);
@@ -239,12 +242,10 @@ router.post('/', auth, async (req, res) => {
         }
       }
 
-      if (finalStatus === 'paid') {
-        try {
-          await emailInvoiceIfPaid(invoiceId);
-        } catch (emailErr) {
-          console.error('Failed to send invoice email on create:', emailErr);
-        }
+      try {
+        await emailInvoiceToCustomer(invoiceId);
+      } catch (emailErr) {
+        console.error('Failed to send invoice email on create:', emailErr);
       }
 
       await logActivity(req.user.id, 'create', 'invoice', invoiceId, `Created invoice ${invoice_number} from quotation`);
@@ -285,12 +286,10 @@ router.post('/', auth, async (req, res) => {
         }
       }
 
-      if (finalStatus === 'paid') {
-        try {
-          await emailInvoiceIfPaid(invoiceId);
-        } catch (emailErr) {
-          console.error('Failed to send invoice email on create:', emailErr);
-        }
+      try {
+        await emailInvoiceToCustomer(invoiceId);
+      } catch (emailErr) {
+        console.error('Failed to send invoice email on create:', emailErr);
       }
 
       await logActivity(req.user.id, 'create', 'invoice', invoiceId, `Created invoice ${invoice_number}`);
@@ -384,7 +383,7 @@ router.put('/:id', auth, async (req, res) => {
 
     if (status === 'paid' && previousStatus !== 'paid') {
       try {
-        await emailInvoiceIfPaid(req.params.id);
+        await emailInvoiceToCustomer(req.params.id);
         responseMessage = 'Invoice updated and invoice emailed.';
       } catch (emailErr) {
         console.error('Failed to send invoice email on update:', emailErr);
