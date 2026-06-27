@@ -393,8 +393,14 @@ router.put('/:id', auth, async (req, res) => {
 
     res.json({ message: responseMessage });
   } catch (err) {
-    res.status(500).json({ message: 'Server error' });
-  }
+  console.error("========== UPDATE INVOICE ERROR ==========");
+  console.error(err);
+  console.error(err.stack);
+
+  res.status(500).json({
+    message: err.message
+  });
+}
 });
 
 // Send invoice email
