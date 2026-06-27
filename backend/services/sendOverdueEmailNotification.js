@@ -6,14 +6,19 @@ const nodemailer = require('nodemailer');
 async function sendOverdueEmailNotification(email, invoice) {
   const transporter = nodemailer.createTransport({
     host: 'smtp.gmail.com',
-    port: 587,
-    secure: false, // TLS
+    port: 465,
+    secure: true,
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
+      pass: String(process.env.EMAIL_PASS || '').replace(/\s+/g, ''),
     },
-    connectionTimeout: 10000,
-    socketTimeout: 10000,
+    requireTLS: true,
+    connectionTimeout: 20000,
+    greetingTimeout: 20000,
+    socketTimeout: 20000,
+    tls: {
+      rejectUnauthorized: false,
+    },
   });
 
   const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('en-IN', {
