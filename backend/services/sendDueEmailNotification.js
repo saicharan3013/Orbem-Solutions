@@ -1,25 +1,9 @@
-const nodemailer = require('nodemailer');
+const { sendMail } = require('./emailService');
 
 /**
  * Send a due date notification email for invoices due today
  */
 async function sendDueEmailNotification(email, invoice) {
-  const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: String(process.env.EMAIL_PASS || '').replace(/\s+/g, ''),
-    },
-    requireTLS: true,
-    connectionTimeout: 20000,
-    greetingTimeout: 20000,
-    socketTimeout: 20000,
-    tls: {
-      rejectUnauthorized: false,
-    },
-  });
 
   const dueDate = invoice.due_date ? new Date(invoice.due_date).toLocaleDateString('en-IN', {
     year: 'numeric',
@@ -100,10 +84,10 @@ async function sendDueEmailNotification(email, invoice) {
   };
 
   try {
-    await transporter.sendMail(mailOptions);
+    await sendMail(mailOptions);
     console.log(`✅ Due date notification sent to ${email} for invoice ${invoice.invoice_number}`);
   } catch (error) {
-    console.error(`❌ Failed to send due notification to ${email}:`, error.message);
+    console.error(`❌ Failed to send due notification to ${email}:`, error);
     throw error;
   }
 }

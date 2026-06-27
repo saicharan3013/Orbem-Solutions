@@ -1,41 +1,6 @@
-const nodemailer = require("nodemailer");
-const dns = require("dns");
-
-dns.setDefaultResultOrder("ipv4first");
-
-function createTransporter() {
-  return nodemailer.createTransport({
-    host: "smtp.gmail.com",
-    port: 587,
-    secure: false,
-
-    auth: {
-      user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS,
-    },
-
-    tls: {
-      rejectUnauthorized: false,
-      family: 4,
-    },
-
-    connectionTimeout: 30000,
-    greetingTimeout: 30000,
-    socketTimeout: 30000,
-  });
-}
+const { sendMail } = require('./emailService');
 
 async function sendInvoiceEmail(email, invoice, pdfBuffer) {
-  const transporter = createTransporter();
-
-  try {
-    await transporter.verify();
-    console.log("✅ SMTP Connected Successfully");
-  } catch (err) {
-    console.error("❌ SMTP Verification Failed");
-    console.error(err);
-    throw err;
-  }
 
   const totalAmount = parseFloat(invoice.amount) || 0;
   const paidAmount = parseFloat(invoice.paid_amount) || 0;
@@ -62,7 +27,7 @@ Thank you for your business!
   `;
 
   try {
-    await transporter.sendMail({
+    await sendMail({
       from: process.env.EMAIL_USER,
       to: email,
       subject: `PayFlow Invoice - ${invoice.invoice_number}`,
@@ -71,11 +36,13 @@ Thank you for your business!
         {
           filename: `invoice-${invoice.invoice_number}.pdf`,
           content: pdfBuffer,
+          contentType: 'application/pdf',
+          contentDisposition: 'attachment',
         },
       ],
     });
   } catch (error) {
-    console.error('Invoice email send failed:', error.message);
+    console.error('Invoice email send failed:', error);
     throw error;
   }
 }

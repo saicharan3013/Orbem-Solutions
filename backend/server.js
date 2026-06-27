@@ -35,6 +35,7 @@ app.use('/api/invoices', require('./routes/invoices'));
 app.use('/api/payments', require('./routes/payments'));
 app.use('/api/staff', require('./routes/staff'));
 app.use('/api/activity-logs', require('./routes/activityLogs'));
+app.use('/api/email', require('./routes/email'));
 
 // Serve scripts directory (for developer-only access to generated PDFs)
 const path = require('path');
