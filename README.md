@@ -47,10 +47,8 @@ Create a `backend/.env` file with these values:
 - `EMAIL_USER` (required for SMTP or default sender)
 - `EMAIL_PASS` (required for SMTP)
 - `EMAIL_FROM` (optional, defaults to `EMAIL_USER`)
-- `SENDGRID_API_KEY` (optional; if set, the app uses SendGrid API instead of SMTP)
-- `EMAIL_HOST` (optional; defaults to `smtp.gmail.com`)
-- `EMAIL_PORT` (optional; defaults to `465` for Gmail SMTP)
-- `EMAIL_SECURE` (optional; set `true` or `false`)
-- `EMAIL_REQUIRE_TLS` (optional; defaults to `true`)
+- `BREVO_API_KEY` (optional; if set, the app uses Brevo API instead of SMTP)
+- `EMAIL_HOST` (optional; defaults to `smtp-relay.brevo.com`)
+- `EMAIL_PORT` (optional; defaults to `587` for Brevo SMTP)
 
-If Render blocks SMTP outbound connections, set `SENDGRID_API_KEY` and the app will send email through SendGrid instead of `smtp.gmail.com`.
+If Render blocks SMTP outbound connections, set `BREVO_API_KEY` and the app will send email through Brevo API instead of SMTP.

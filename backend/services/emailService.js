@@ -1,18 +1,16 @@
 const https = require('https');
 const nodemailer = require('nodemailer');
 
-const sendGridKey = process.env.SENDGRID_API_KEY;
+const brevoKey = process.env.BREVO_API_KEY;
 const emailUser = process.env.EMAIL_USER;
 const emailPass = String(process.env.EMAIL_PASS || '').replace(/\s+/g, '');
 const emailFrom = process.env.EMAIL_FROM || emailUser;
 const emailHost = process.env.EMAIL_HOST || 'smtp-relay.brevo.com';
 const emailPort = Number(process.env.EMAIL_PORT || 587);
-const emailSecure = false;
-const emailRequireTLS = true;
 
 function createSmtpTransporter() {
   if (!emailUser || !emailPass) {
-    throw new Error("EMAIL_USER and EMAIL_PASS are required");
+    throw new Error('EMAIL_USER and EMAIL_PASS are required for SMTP transport');
   }
 
   return nodemailer.createTransport({
@@ -26,18 +24,18 @@ function createSmtpTransporter() {
   });
 }
 
-function sendGridRequest(payload) {
+function brevoRequest(payload) {
   return new Promise((resolve, reject) => {
     const requestData = JSON.stringify(payload);
 
     const requestOptions = {
       method: 'POST',
-      hostname: 'api.sendgrid.com',
-      path: '/v3/mail/send',
+      hostname: 'api.brevo.com',
+      path: '/v3/smtp/email',
       headers: {
-        Authorization: `Bearer ${sendGridKey}`,
         'Content-Type': 'application/json',
         'Content-Length': Buffer.byteLength(requestData),
+        'api-key': brevoKey,
       },
     };
 
@@ -50,7 +48,7 @@ function sendGridRequest(payload) {
         if (res.statusCode >= 200 && res.statusCode < 300) {
           resolve();
         } else {
-          reject(new Error(`SendGrid send failed (${res.statusCode}): ${responseBody}`));
+          reject(new Error(`Brevo send failed (${res.statusCode}): ${responseBody}`));
         }
       });
     });
@@ -61,66 +59,56 @@ function sendGridRequest(payload) {
   });
 }
 
-async function sendViaSendGrid({ from, to, subject, text, html, attachments }) {
-  if (!sendGridKey) {
-    throw new Error('SENDGRID_API_KEY is not configured');
+async function sendViaBrevo({ from, to, subject, text, html, attachments }) {
+  if (!brevoKey) {
+    throw new Error('BREVO_API_KEY is not configured');
   }
 
   const payload = {
-    personalizations: [{ to: [{ email: to }] }],
-    from: { email: from || emailFrom },
+    sender: { email: from || emailFrom },
+    to: [{ email: to }],
     subject,
-    content: [],
   };
 
-  if (text) payload.content.push({ type: 'text/plain', value: text });
-  if (html) payload.content.push({ type: 'text/html', value: html });
+  if (text) payload.textContent = text;
+  if (html) payload.htmlContent = html;
 
   if (attachments && attachments.length) {
-    payload.attachments = attachments.map((attachment) => {
+    payload.attachment = attachments.map((attachment) => {
       let contentString = attachment.content;
-
       if (Buffer.isBuffer(attachment.content)) {
         contentString = attachment.content.toString('base64');
       } else if (typeof attachment.content === 'string') {
         contentString = Buffer.from(attachment.content, 'utf8').toString('base64');
       }
-
       return {
         content: contentString,
-        filename: attachment.filename,
+        name: attachment.filename,
         type: attachment.contentType || 'application/octet-stream',
-        disposition: attachment.contentDisposition || 'attachment',
       };
     });
   }
 
-  await sendGridRequest(payload);
+  await brevoRequest(payload);
 }
 
 async function sendMail(options) {
   if (!options.to) {
-    throw new Error("Missing recipient address");
+    throw new Error('Missing recipient address');
   }
 
   if (!options.subject) {
-    throw new Error("Missing email subject");
+    throw new Error('Missing email subject');
   }
 
   options.from = options.from || emailFrom;
 
-  if (sendGridKey) {
-    return sendViaSendGrid(options);
+  if (brevoKey) {
+    return sendViaBrevo(options);
   }
 
   const transporter = createSmtpTransporter();
-
-  console.log("Checking SMTP connection...");
-
   await transporter.verify();
-
-  console.log("SMTP connection successful!");
-
   return transporter.sendMail(options);
 }
 
