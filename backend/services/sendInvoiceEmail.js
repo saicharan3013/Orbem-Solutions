@@ -2,26 +2,23 @@ const nodemailer = require("nodemailer");
 
 function createTransporter() {
   return nodemailer.createTransport({
-  host: "smtp.gmail.com",
-  port: 587,
-  secure: false,
-  family: 4,
+    service: "gmail",
 
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: String(process.env.EMAIL_PASS || "").replace(/\s+/g, ""),
-  },
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: String(process.env.EMAIL_PASS || "").trim(),
+    },
 
-  requireTLS: true,
+    family: 4,
 
-  connectionTimeout: 20000,
-  greetingTimeout: 20000,
-  socketTimeout: 20000,
+    connectionTimeout: 30000,
+    greetingTimeout: 30000,
+    socketTimeout: 30000,
 
-  tls: {
-    rejectUnauthorized: false,
-  },
-});
+    tls: {
+      rejectUnauthorized: false,
+    },
+  });
 }
 
 async function sendInvoiceEmail(email, invoice, pdfBuffer) {
