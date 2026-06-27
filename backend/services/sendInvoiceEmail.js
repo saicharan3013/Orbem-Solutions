@@ -21,6 +21,16 @@ function createTransporter() {
 
 async function sendInvoiceEmail(email, invoice, pdfBuffer) {
   const transporter = createTransporter();
+
+  try {
+    await transporter.verify();
+    console.log("✅ SMTP Connected Successfully");
+  } catch (err) {
+    console.error("❌ SMTP Verification Failed");
+    console.error(err);
+    throw err;
+  }
+
   const totalAmount = parseFloat(invoice.amount) || 0;
   const paidAmount = parseFloat(invoice.paid_amount) || 0;
   const remainingAmount = totalAmount - paidAmount;
