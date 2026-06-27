@@ -100,11 +100,13 @@ async function sendViaSendGrid({ from, to, subject, text, html, attachments }) {
 
 async function sendMail(options) {
   if (!options.to) {
-    throw new Error('Missing recipient address');
+    throw new Error("Missing recipient address");
   }
+
   if (!options.subject) {
-    throw new Error('Missing email subject');
+    throw new Error("Missing email subject");
   }
+
   options.from = options.from || emailFrom;
 
   if (sendGridKey) {
@@ -112,7 +114,13 @@ async function sendMail(options) {
   }
 
   const transporter = createSmtpTransporter();
+
+  console.log("Checking SMTP connection...");
+
   await transporter.verify();
+
+  console.log("SMTP connection successful!");
+
   return transporter.sendMail(options);
 }
 
