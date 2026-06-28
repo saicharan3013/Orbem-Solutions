@@ -1,6 +1,27 @@
 const PDFDocument = require("pdfkit");
 const db = require("../db");
 
+function formatAirportLabel(value) {
+  if (!value) return '—';
+
+  const text = String(value).trim();
+  if (!text) return '—';
+
+  const codeMatch = text.match(/\b([A-Z]{3})\b/);
+  if (codeMatch) return codeMatch[1].toUpperCase();
+
+  const words = text.split(/[^A-Za-z]+/).filter(Boolean);
+  if (words.length >= 2) {
+    const shortForm = words
+      .slice(0, 3)
+      .map((word) => word.charAt(0).toUpperCase())
+      .join('');
+    return shortForm || text.slice(0, 6).toUpperCase();
+  }
+
+  return text.slice(0, 6).toUpperCase();
+}
+
 function generateInvoicePDF(invoice) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -135,10 +156,10 @@ function generateInvoicePDF(invoice) {
     const routeTopY = shipmentBoxY + 24;
 
     doc.font("Helvetica").fillColor("#666").text("Origin Airport", routeLeftX, routeTopY);
-    doc.font("Helvetica-Bold").fillColor("black").text(invoice.origin || '—', routeLeftX + 86, routeTopY, { width: Math.floor(usableWidth * 0.34) });
+    doc.font("Helvetica-Bold").fillColor("black").text(formatAirportLabel(invoice.origin), routeLeftX + 86, routeTopY, { width: Math.floor(usableWidth * 0.34) });
 
     doc.font("Helvetica").fillColor("#666").text("Destination Airport", routeLeftX, routeTopY + 18);
-    doc.font("Helvetica-Bold").fillColor("black").text(invoice.destination || '—', routeLeftX + 86, routeTopY + 18, { width: Math.floor(usableWidth * 0.34) });
+    doc.font("Helvetica-Bold").fillColor("black").text(formatAirportLabel(invoice.destination), routeLeftX + 86, routeTopY + 18, { width: Math.floor(usableWidth * 0.34) });
 
     doc.font("Helvetica").fillColor("#666").text("Service Type", routeRightX, routeTopY);
     doc.font("Helvetica-Bold").fillColor("black").text(invoice.service_type || invoice.shipment_type || 'Air Cargo', routeRightX + 72, routeTopY, { width: Math.floor(usableWidth * 0.36) });
@@ -192,6 +213,7 @@ function generateInvoicePDF(invoice) {
     // Table data rows
     doc.fontSize(9).font("Helvetica").fillColor("black");
     let currentY = tableY + 28;
+    const itemRowHeight = items.length > 6 ? 22 : 26;
     
     items.forEach((item, idx) => {
       const desc = item.description || "Air Cargo Logistics Service";
@@ -200,14 +222,14 @@ function generateInvoicePDF(invoice) {
       const amt = qty * price;
       
       doc.text(desc, col1, currentY, { width: Math.floor(usableWidth * 0.22) });
-      doc.text(idx === 0 ? (invoice.origin || 'Standard Routing') : '—', col2, currentY, { width: Math.floor(usableWidth * 0.18) });
-      doc.text(idx === 0 ? (invoice.destination || '—') : '—', col3, currentY, { width: Math.floor(usableWidth * 0.18) });
+      doc.text(idx === 0 ? formatAirportLabel(invoice.origin || 'Standard Routing') : '—', col2, currentY, { width: Math.floor(usableWidth * 0.18) });
+      doc.text(idx === 0 ? formatAirportLabel(invoice.destination) : '—', col3, currentY, { width: Math.floor(usableWidth * 0.18) });
       doc.text(item.weight ? `${item.weight} kg` : (idx === 0 && invoice.weight ? invoice.weight.toString() : '—'), col4, currentY, { width: Math.floor(usableWidth * 0.12) });
-      doc.text(`₹ ${price.toFixed(2)}`, col5, currentY, { width: Math.floor(usableWidth * 0.12) });
-      doc.text(`₹ ${amt.toFixed(2)}`, col6 - 40, currentY, { align: 'right', width: pageWidth - marginRight - (col6 - 40) });
+      doc.text(price.toFixed(2), col5, currentY, { width: Math.floor(usableWidth * 0.12) });
+      doc.text(amt.toFixed(2), col6 - 40, currentY, { align: 'right', width: pageWidth - marginRight - (col6 - 40) });
       
       doc.moveTo(marginLeft, currentY + 15).lineTo(pageWidth - marginRight, currentY + 15).stroke("#e2e8f0");
-      currentY += 24;
+      currentY += itemRowHeight;
     });
 
     // ==================== AMOUNT SUMMARY SECTION ====================

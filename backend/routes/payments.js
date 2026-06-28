@@ -103,14 +103,20 @@ router.post('/', auth, async (req, res) => {
         i.discount,
         c.name AS customer_name,
         c.email AS customer_email,
+        c.phone as customer_phone,
+        c.gst_number as customer_gstin,
+        c.address as customer_address,
+        q.origin_airport AS origin,
+        q.destination_airport AS destination,
         COALESCE(SUM(p.amount), 0) as paid_amount,
-        (i.amount - COALESCE(SUM(p.amount), 0)) as remaining_amount
+        (i.amount - COALESCE(SUM(p.amount), 0)) as remaining_amount,
+        CASE WHEN i.due_date < CURDATE() AND i.status != 'paid' THEN 1 ELSE 0 END as is_overdue
       FROM invoices i
-      LEFT JOIN customers c
-      ON i.customer_id = c.id
+      LEFT JOIN customers c ON i.customer_id = c.id
       LEFT JOIN payments p ON i.id = p.invoice_id
+      LEFT JOIN quotations q ON i.quotation_id = q.id
       WHERE i.id = ?
-      GROUP BY i.id, i.user_id, i.customer_id, i.quotation_id, i.invoice_number, i.amount, i.status, i.due_date, i.issue_date, i.notes, i.created_at, i.reminder_email_sent, i.due_date_email_sent, i.overdue_email_sent, i.items, i.tax_rate, i.discount, c.name, c.email
+      GROUP BY i.id, i.user_id, i.customer_id, i.quotation_id, i.invoice_number, i.amount, i.status, i.due_date, i.issue_date, i.notes, i.created_at, i.reminder_email_sent, i.due_date_email_sent, i.overdue_email_sent, i.items, i.tax_rate, i.discount, c.name, c.email, c.phone, c.gst_number, c.address, q.origin_airport, q.destination_airport
     `, [invoice_id]);
 
     // Only set status to 'paid' if payment covers full invoice amount
