@@ -95,17 +95,12 @@ export default function Invoices() {
 
   const downloadPDF = async (id, invoiceNumber) => {
     try {
-      const token = localStorage.getItem('orbem_token');
-      const response = await fetch(`https://orbem-solutions-backend.onrender.com/${id}/pdf`, {
-        method: 'GET',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
+      const response = await api.get(`/invoices/${id}/pdf`, {
+        responseType: 'blob',
+        headers: { Accept: 'application/pdf' }
       });
-      
-      if (!response.ok) throw new Error('Failed to download PDF');
-      
-      const blob = await response.blob();
+
+      const blob = new Blob([response.data], { type: 'application/pdf' });
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
@@ -115,7 +110,7 @@ export default function Invoices() {
       window.URL.revokeObjectURL(url);
       document.body.removeChild(link);
     } catch (err) {
-      setMessage({ type: 'error', text: 'Failed to download PDF' });
+      setMessage({ type: 'error', text: err.response?.data?.message || 'Failed to download PDF' });
       setTimeout(() => setMessage(null), 3000);
     }
   };

@@ -264,13 +264,6 @@ router.post('/:id/convert-to-invoice', auth, async (req, res) => {
     
     await logActivity(req.user.id, 'create', 'invoice', result.insertId, `Created invoice ${invoiceNumber} from quotation ${quotation.quotation_number}`);
 
-    // Update quotation status to rejected to prevent duplicate conversions
-    await db.query(`
-      UPDATE quotations 
-      SET status = 'rejected'
-      WHERE id = ?
-    `, [req.params.id]);
-
     await logActivity(req.user.id, 'update', 'quotation', parseInt(req.params.id), `Converted quotation ${quotation.quotation_number} to invoice ${invoiceNumber}`);
     
     res.json({ 

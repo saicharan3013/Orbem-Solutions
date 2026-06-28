@@ -117,27 +117,51 @@ function generateInvoicePDF(invoice) {
     doc.text(`Phone: ${invoice.customer_phone || invoice.customer_contact || 'N/A'}`, rightCol, billY + 28);
     doc.text(`Email: ${invoice.customer_email || 'N/A'}`, rightCol, billY + 40);
     doc.text(`GSTIN: ${invoice.customer_gstin || invoice.customer_gst || 'N/A'}`, rightCol, billY + 52);
-    doc.text(`Address: ${invoice.customer_address || 'N/A'}`, rightCol, billY + 64, { width: Math.floor(usableWidth * 0.45) });
+    doc.text(`Address: ${invoice.customer_address || 'N/A'}`, rightCol, billY + 64, { width: Math.floor(usableWidth * 0.42), lineGap: 1 });
 
     // Separator line
     doc.moveTo(marginLeft, detailsY + 120).lineTo(pageWidth - marginRight, detailsY + 120).stroke("#d0d0d0");
 
+    // ==================== SHIPMENT / ROUTE DETAILS BOX ====================
+    const shipmentBoxY = detailsY + 132;
+    const shipmentBoxHeight = 64;
+    doc.roundedRect(marginLeft, shipmentBoxY, usableWidth, shipmentBoxHeight, 4).stroke("#dbeafe");
+    doc.rect(marginLeft, shipmentBoxY, usableWidth, shipmentBoxHeight).fill("#f8fbff");
+    doc.fillColor("#1a2847").fontSize(10).font("Helvetica-Bold").text("Shipment / Route Details", marginLeft + 10, shipmentBoxY + 8);
+
+    doc.fillColor("black").fontSize(9).font("Helvetica");
+    const routeLeftX = marginLeft + 12;
+    const routeRightX = marginLeft + Math.floor(usableWidth * 0.5) + 8;
+    const routeTopY = shipmentBoxY + 24;
+
+    doc.font("Helvetica").fillColor("#666").text("Origin Airport", routeLeftX, routeTopY);
+    doc.font("Helvetica-Bold").fillColor("black").text(invoice.origin || '—', routeLeftX + 86, routeTopY, { width: Math.floor(usableWidth * 0.34) });
+
+    doc.font("Helvetica").fillColor("#666").text("Destination Airport", routeLeftX, routeTopY + 18);
+    doc.font("Helvetica-Bold").fillColor("black").text(invoice.destination || '—', routeLeftX + 86, routeTopY + 18, { width: Math.floor(usableWidth * 0.34) });
+
+    doc.font("Helvetica").fillColor("#666").text("Service Type", routeRightX, routeTopY);
+    doc.font("Helvetica-Bold").fillColor("black").text(invoice.service_type || invoice.shipment_type || 'Air Cargo', routeRightX + 72, routeTopY, { width: Math.floor(usableWidth * 0.36) });
+
+    doc.font("Helvetica").fillColor("#666").text("Weight", routeRightX, routeTopY + 18);
+    doc.font("Helvetica-Bold").fillColor("black").text(invoice.weight ? `${invoice.weight} kg` : '—', routeRightX + 72, routeTopY + 18, { width: Math.floor(usableWidth * 0.36) });
+
     // ==================== CARGO & SHIPMENT TABLE ====================
-    doc.fontSize(11).font("Helvetica-Bold").fillColor("black").text("Cargo & Shipment Details", marginLeft, detailsY + 140);
+    doc.fontSize(11).font("Helvetica-Bold").fillColor("black").text("Cargo & Shipment Details", marginLeft, shipmentBoxY + shipmentBoxHeight + 14);
 
     // Table headers
-    const tableY = detailsY + 160;
+    const tableY = shipmentBoxY + shipmentBoxHeight + 34;
     const headerBg = "#f0f0f0";
     doc.rect(marginLeft, tableY, usableWidth, 22).fill(headerBg);
     doc.rect(marginLeft, tableY, usableWidth, 22).stroke("#d0d0d0");
     
     doc.fillColor("black").fontSize(9).font("Helvetica-Bold");
     const headerY = tableY + 6;
-    const col1 = marginLeft + 10;
-    const col2 = marginLeft + Math.floor(usableWidth * 0.25);
-    const col3 = marginLeft + Math.floor(usableWidth * 0.45);
+    const col1 = marginLeft + 8;
+    const col2 = marginLeft + Math.floor(usableWidth * 0.26);
+    const col3 = marginLeft + Math.floor(usableWidth * 0.46);
     const col4 = marginLeft + Math.floor(usableWidth * 0.62);
-    const col5 = marginLeft + Math.floor(usableWidth * 0.75);
+    const col5 = marginLeft + Math.floor(usableWidth * 0.77);
     const col6 = marginLeft + Math.floor(usableWidth * 0.9);
 
     doc.text("Cargo / Shipment Type", col1, headerY);
@@ -175,11 +199,11 @@ function generateInvoicePDF(invoice) {
       const price = parseFloat(item.unit_price || 0);
       const amt = qty * price;
       
-      doc.text(desc, col1, currentY, { width: Math.floor(usableWidth * 0.23) });
-      doc.text(idx === 0 ? (invoice.origin || 'Standard Routing') : '—', col2, currentY);
-      doc.text(idx === 0 ? (invoice.destination || '—') : '—', col3, currentY);
-      doc.text(item.weight ? `${item.weight} kg` : (idx === 0 && invoice.weight ? invoice.weight.toString() : '—'), col4, currentY);
-      doc.text(`₹ ${price.toFixed(2)}`, col5, currentY);
+      doc.text(desc, col1, currentY, { width: Math.floor(usableWidth * 0.22) });
+      doc.text(idx === 0 ? (invoice.origin || 'Standard Routing') : '—', col2, currentY, { width: Math.floor(usableWidth * 0.18) });
+      doc.text(idx === 0 ? (invoice.destination || '—') : '—', col3, currentY, { width: Math.floor(usableWidth * 0.18) });
+      doc.text(item.weight ? `${item.weight} kg` : (idx === 0 && invoice.weight ? invoice.weight.toString() : '—'), col4, currentY, { width: Math.floor(usableWidth * 0.12) });
+      doc.text(`₹ ${price.toFixed(2)}`, col5, currentY, { width: Math.floor(usableWidth * 0.12) });
       doc.text(`₹ ${amt.toFixed(2)}`, col6 - 40, currentY, { align: 'right', width: pageWidth - marginRight - (col6 - 40) });
       
       doc.moveTo(marginLeft, currentY + 15).lineTo(pageWidth - marginRight, currentY + 15).stroke("#e2e8f0");

@@ -28,7 +28,7 @@ Thank you for your business!
 
   try {
     await sendMail({
-      from: process.env.EMAIL_USER,
+      from: process.env.EMAIL_FROM || process.env.EMAIL_USER,
       to: email,
       subject: `PayFlow Invoice - ${invoice.invoice_number}`,
       text: emailBody,
