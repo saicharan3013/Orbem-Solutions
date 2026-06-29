@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import axios from 'axios';
+import api from '../api';
 import './History.css';
 
 export default function History({ isOpen, onClose }) {
@@ -21,26 +21,23 @@ export default function History({ isOpen, onClose }) {
   const fetchActivityLogs = async ({ page = currentPage, search = searchText, action = actionFilter, entity = entityFilter } = {}) => {
     setLoading(true);
     try {
-      const token = localStorage.getItem('orbem_token');
       const offset = page * logsPerPage;
-      const params = new URLSearchParams({
+      const params = {
         limit: logsPerPage,
-        offset
-      });
+        offset,
+      };
 
       if (search.trim()) {
-        params.append('search', search.trim());
+        params.search = search.trim();
       }
       if (action !== 'all') {
-        params.append('action', action);
+        params.action = action;
       }
       if (entity !== 'all') {
-        params.append('entity', entity);
+        params.entity = entity;
       }
 
-      const res = await axios.get(`/api/activity-logs?${params.toString()}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      const res = await api.get('/activity-logs', { params });
 
       setLogs(res.data.logs);
       setTotalLogs(res.data.pagination.total);
@@ -59,10 +56,7 @@ export default function History({ isOpen, onClose }) {
     }
 
     try {
-      const token = localStorage.getItem('orbem_token');
-      await axios.delete(`/api/activity-logs/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
+      await api.delete(`/activity-logs/${id}`);
       fetchActivityLogs({ page: currentPage });
     } catch (err) {
       console.error('Failed to delete activity log:', err);
